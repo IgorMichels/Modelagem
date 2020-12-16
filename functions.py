@@ -12,7 +12,7 @@ def catch_players(file, top):
         
     return top_players
 
-def catch_games(file, top_players, surface):
+def catch_games(file, top_players, surface, sets):
     # return a dataframe with games of one year of top players in one surface
     games = pd.read_csv(file)
     
@@ -26,7 +26,8 @@ def catch_games(file, top_players, surface):
     for game in games.index:
         if (games.loc[game, 'winner_id'] not in top_players) or \
            (games.loc[game, 'loser_id'] not in top_players) or \
-           (games.loc[game, 'surface'] != surface):
+           (games.loc[game, 'surface'] != surface) or \
+           (games.loc[game, 'best_of'] != sets):
             games.drop(game, inplace = True)
 
     games.reset_index(inplace = True)
@@ -34,7 +35,7 @@ def catch_games(file, top_players, surface):
     
     return games
 
-def catch_all_games(files, rank, top, surface = 'Hard'):
+def catch_all_games(files, rank, top, surface = 'Hard', sets = 3):
     # return a dataframe with games of top players in one surface (default: hard)
     players = catch_players(rank, top)
     games = pd.DataFrame(columns = ['surface',
@@ -49,11 +50,20 @@ def catch_all_games(files, rank, top, surface = 'Hard'):
                                      'loser_rank_points'])
 
     for file in files:
-        data = catch_games(file, players, surface)
+        data = catch_games(file, players, surface, sets)
         games = pd.concat([games, data])
 
     games.reset_index(inplace = True)
     games.pop('index')
     games.pop('surface')
+    games.pop('best_of')
+    games = games.reindex(columns = ['tourney_date',
+                                     'score',
+                                     'winner_id',
+                                     'winner_rank',
+                                     'winner_rank_points',
+                                     'loser_id',
+                                     'loser_rank',
+                                     'loser_rank_points'])
 
     return games
