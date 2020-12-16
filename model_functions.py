@@ -1,5 +1,4 @@
 from math import exp, log, sqrt
-import numpy as np
 from scipy.optimize import minimize
 
 def find_probability(player1, player2):
@@ -12,7 +11,26 @@ def find_probability(player1, player2):
     bi = player2[0]
     bj = player2[1]
 
-    probability = exp(bi * aj)/(exp(bi * aj) + exp(bj * ai))
+    try:
+        A = exp(bi * aj)
+    except OverflowError:
+        if bi * aj > 0:
+            return 1 - 1e-6
+        else:
+            return 1e-6
+
+    try:
+        B = exp(bj * ai)
+    except OverflowError:
+        if bj * ai > 0:
+            return 1 - 1e-6
+        else:
+            return 1e-6
+        
+    try:
+        probability = A/(A + B)
+    except ZeroDivisionError:
+        return 1
 
     return probability
 
@@ -47,7 +65,9 @@ def likelihood(players, results):
         index2 = result[1]
 
         probability = find_probability(players[index1], players[index2])
-        log_likelihood += log(probability)
+        try:
+            log_likelihood += log(probability)
+        except ValueError:
+            log_likelihood += 1
 
     return - log_likelihood
-

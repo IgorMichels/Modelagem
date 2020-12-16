@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 def catch_players(file, top):
     # returns a list with top players' ID
@@ -70,3 +71,27 @@ def catch_all_games(files, rank, top, surface = 'Hard', sets = 3):
                                      'loser_rank_points'])
 
     return games
+
+def catch_data(games):
+    players_id = []
+    players = []
+    results = []
+    bounds = []
+
+    for game in games.index:
+        if games.loc[game, 'winner_id'] not in players_id:
+            players_id.append(games.loc[game, 'winner_id'])
+            players.append(np.random.random())
+            players.append(np.random.random())
+            bounds.append((0, None))
+            bounds.append((None, None))
+        if games.loc[game, 'loser_id'] not in players_id:
+            players_id.append(games.loc[game, 'loser_id'])
+            players.append(np.random.random())
+            players.append(np.random.random())
+            bounds.append((0, None))
+            bounds.append((None, None))
+        results.append([players_id.index(games.loc[game, 'winner_id']),
+                        players_id.index(games.loc[game, 'loser_id'])])
+
+    return players, results, bounds
