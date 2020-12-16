@@ -1,4 +1,6 @@
 from math import exp, log, sqrt
+import numpy as np
+from scipy.optimize import minimize
 
 def find_probability(player1, player2):
     # receives two vectors
@@ -29,7 +31,15 @@ def find_parameter(probability):
 def likelihood(players, results):
     # receives list of players and results
     # returns minus log-likelihood of results and players' parameters
-    
+    if type(players[0]) != list:
+        list_players = []
+        i = 0
+        while i < len(players):
+            list_players.append([players[i], players[i + 1]])
+            i += 2
+
+        players = list_players
+
     log_likelihood = 0
 
     for result in results:
@@ -40,3 +50,4 @@ def likelihood(players, results):
         log_likelihood += log(probability)
 
     return - log_likelihood
+
