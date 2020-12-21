@@ -72,26 +72,56 @@ def catch_all_games(files, rank, top, surface = 'Hard', sets = 3):
 
     return games
 
-def catch_data(games):
+def catch_data(games, fit):
+    # receives a dataframe with games and returns data to optimize
     players_id = []
     players = []
     results = []
     bounds = []
+    
+    if fit:
+        games, trash, players_id = split_games(games)
+    else:
+        trash, games, players_id = split_games(games)
+    
+    for i in range(len(players_id)):
+        players.append(np.random.random())
+        players.append(np.random.random())
+        bounds.append((0, None))
+        bounds.append((None, None))
+            
+    for game in games.index:
+        results.append([games.loc[game, 'winner_id'],
+                        games.loc[game, 'loser_id']])
+    
+    if fit:
+        return players_id, players, results, bounds, games
+    else:
+        return results, games
 
+def split_games(games):
+    # split a dataframe
+    players_id = []
+    
     for game in games.index:
         if games.loc[game, 'winner_id'] not in players_id:
             players_id.append(games.loc[game, 'winner_id'])
-            players.append(np.random.random())
-            players.append(np.random.random())
-            bounds.append((0, None))
-            bounds.append((None, None))
         if games.loc[game, 'loser_id'] not in players_id:
             players_id.append(games.loc[game, 'loser_id'])
-            players.append(np.random.random())
-            players.append(np.random.random())
-            bounds.append((0, None))
-            bounds.append((None, None))
-        results.append([players_id.index(games.loc[game, 'winner_id']),
-                        players_id.index(games.loc[game, 'loser_id'])])
+    
+        games.loc[game, 'winner_id'] = players_id.index(games.loc[game, 'winner_id'])
+        games.loc[game, 'loser_id']  = players_id.index(games.loc[game, 'loser_id'])
 
-    return players, results, bounds
+    sep = int(len(games.index)/2)
+    games_fit  = games.iloc[:sep, :]
+    games_test = games.iloc[sep:, :]
+    
+    for game in games_test.index:
+        if (games_test.loc[game, 'winner_id'] > max(games_fit['winner_id'].max(), games_fit['loser_id'].max())) or \
+           (games_test.loc[game, 'loser_id'] > max(games_fit['winner_id'].max(), games_fit['loser_id'].max())):
+            games_test.drop(game, inplace = True)
+        
+    games_test.reset_index(inplace = True)
+    games_test.pop('index')
+    
+    return games_fit, games_test, players_id
