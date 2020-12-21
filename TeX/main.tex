@@ -1,0 +1,73 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[backend = biber]{biblatex}
+\usepackage[utf8]{inputenc}
+\usepackage[portuges]{babel}
+\usepackage{csquotes}
+\usepackage{geometry}
+\usepackage{indentfirst}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{xparse}
+\usepackage{soul}
+
+\addbibresource{referencias.bib}
+\geometry{top = 3cm, bottom = 2cm, left = 3cm, right = 2cm}
+\NewDocumentCommand{\codeword}{v}{\texttt{\textcolor{blue}{#1}}}
+
+\title{Modelagem do Tênis}
+\author{Igor Patrício Michels}
+% \date{December 2020}
+
+\begin{document}
+
+\maketitle
+
+\section{Introdução}
+% por enquanto vou deixar assim, mais adiante melhoro isso
+
+O presente documento visa relatar o desenvolvimento da modelagem do tênis, buscando analisar a linearidade do mesmo, isto é, se um jogador $A$ ganha de um jogador $B$, o qual ganha de $C$, podemos afirmar que $A$ ganha de $C$?
+
+Os dados utilizados podem ser encontrados em \cite{github}, enquanto os códigos utilizados podem ser vistos em \cite{github2}.
+
+\section{Metodologia}
+% apenas uma descrição do que estou fazendo
+
+Em primeiro lugar, fiz um tratamento de dados, criando algumas funções que auxiliam na captação dos dados, de um arquivo {\fontfamily{pcr}\selectfont .csv} para um DataFrame do pandas, as quais podem ser encontradas no arquivo {\fontfamily{pcr}\selectfont data\_functions.py}. Nesse arquivo temos as seguintes funções:
+\begin{itemize}
+    \item
+        \codeword{catch_players}: recebe o arquivo {\fontfamily{pcr}\selectfont .csv} com o ranking e um valor $n$ representando quantos jogadores queremos e retorna uma lista com esse top $n$ jogadores do ranking;
+        
+    \item
+        \codeword{catch_games}: recebe um arquivo com os jogos de um ano, a lista de jogadores retornada pela função anterior, a superfície\footnote{Tipo de quadra.} desejada e a quantidade de sets desejada, retornando um DataFrame com todos os jogos entre os jogadores da lista de entrada que satisfazem as restrições de superfície e de sets;
+        
+    \item
+        \codeword{catch_all_games}: generalização da função anterior, recebendo uma lista de arquivos ao invés de um arquivo só;
+        
+    \item
+        \codeword{split_games}: divide um DataFrame de jogos em dois, possibilitando dividir os jogos entre jogos para fi do modelo e jogos para testar o modelo;
+        
+    \item
+        \codeword{catch_data}: recebe o DataFrame com todos os jogos e um booleano para ver se iremos retornar dados para fit (preparado para otimização) ou para ver a eficácia do modelo (retornando apenas os resultados e os jogos).
+\end{itemize}
+
+Tendo feito o tratamento dos dados, podemos fazer a modelagem. Para tanto, defini, no arquivo {\fontfamily{pcr}\selectfont model\_functions.py}, as seguintes funções:
+\begin{itemize}
+    \item
+        \codeword{find_probability}: calcula a probabilidade de um jogador $A$, com parâmetros $(a_1, a_2)$ ganhar de um jogador $B$, com parâmetros $(b_1, b_2)$ através da expressão
+        \[P\left(A ~ vencer ~ B\right) = \frac{\exp{a_2\cdot b_1}}{\exp{a_2\cdot b_1} + \exp{b_2\cdot a_1}};\]
+        
+    \item
+        \codeword{find_parameter}: recebe a probabilidade de um jogador $A$ ganhar de um jogador $B$ e retorna um dos possíveis conjunto de parâmetros;\footnote{Essa função acabou não sendo utilizada.}
+        
+    \item
+        \codeword{likelihood}: recebe uma lista de jogadores (cada elemento dessa lista é um vetor com os parâmetros do jogador) e os resultados dos jogos, retornando a log-verossimilhança negativa dos dados observados com os parâmetros dados.
+\end{itemize}
+
+Feito isso, podemos utilizar a biblioteca {\fontfamily{pcr}\selectfont scipy} para achar os parâmetros que minimizam a log-verossimilhança negativa nos dados de fitagem. Ao realizar o cálculo da verossimilhança com os dados de teste obtemos um valor inferior ao resultante no fit, o que nos leva a inferir que o modelo está no caminho certo.
+
+Por fim, realizei um teste de linearidade, pegando todos os possíveis trios de atletas e buscando por trios $A$, $B$ e $C$ de modo que $A$ ganhe de $B$, $B$ ganhe de $C$ e $C$ ganhe de $A$ ou que $B$ ganhe de $A$, $A$ ganhe de $C$ e $C$ ganhe de $B$. Fazendo isso, percebi que aproximadamente $95\%$ dos trios apresentaram linearidade.
+
+\printbibliography
+
+\end{document}
