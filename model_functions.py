@@ -1,4 +1,4 @@
-from math import exp, log, sqrt
+from math import * # exp, log, sqrt
 from scipy.optimize import minimize
 
 def find_probability(player1, player2):
